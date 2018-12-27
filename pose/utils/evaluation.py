@@ -44,7 +44,7 @@ def calc_dists(preds, target, normalize):
 def dist_acc(dists, thr=0.5):
     ''' Return percentage below threshold while ignoring values with a -1 '''
     if dists.ne(-1).sum() > 0:
-        return dists.le(thr).eq(dists.ne(-1)).sum()*1.0 / dists.ne(-1).sum()
+        return float(dists.le(thr).eq(dists.ne(-1)).sum()) / float(dists.ne(-1).sum())
     else:
         return -1
 

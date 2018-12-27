@@ -174,7 +174,7 @@ def train(train_loader, model, criterion, optimizer, debug=False, flip=True):
             plt.draw()
 
         # measure accuracy and record loss
-        losses.update(loss.data[0], inputs.size(0))
+        losses.update(loss.item(), inputs.size(0))
         acces.update(acc[0], inputs.size(0))
 
         # compute gradient and do SGD step
@@ -267,7 +267,7 @@ def validate(val_loader, model, criterion, num_classes, debug=False, flip=True):
             plt.draw()
 
         # measure accuracy and record loss
-        losses.update(loss.data[0], inputs.size(0))
+        losses.update(loss.item(), inputs.size(0))
         acces.update(acc[0], inputs.size(0))
 
         # measure elapsed time
