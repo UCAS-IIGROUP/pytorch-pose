@@ -17,6 +17,7 @@ Some codes for data preparation and augmentation are brought from the [Stacked h
    ```
 2. Install all dependencies in virtualenv
     ```
+    source posevenv/bin/activate
     pip install -r requirements.txt
     ```
 3. Clone the repository with submodule
@@ -28,6 +29,11 @@ Some codes for data preparation and augmentation are brought from the [Stacked h
    ```
    ln -s PATH_TO_MPII_IMAGES_DIR data/mpii/images
    ```
+
+5. Disable cudnn for batchnorm layer to solve bug in pytorch0.4.0
+    ```
+    sed -i "1194s/torch\.backends\.cudnn\.enabled/False/g" ./pose_venv/lib/python2.7/site-packages/torch/nn/functional.py
+    ```
 
 ## Usage
 
