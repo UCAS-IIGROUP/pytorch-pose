@@ -11,14 +11,20 @@ Some codes for data preparation and augmentation are brought from the [Stacked h
 - Training/testing results visualization
 
 ## Installation
-1. PyTorch (>= 0.2.0): Please follow the [installation instruction of PyTorch](http://pytorch.org/). Note that the code is developed with Python2 and has not been tested with Python3 yet.
-
-2. Clone the repository with submodule
+1. Create a virtualenv
    ```
-   git clone --recursive https://github.com/bearpaw/pytorch-pose.git
+   virtualenv -p /usr/bin/python2.7 posevenv
+   ```
+2. Install all dependencies in virtualenv
+    ```
+    pip install -r requirements.txt
+    ```
+3. Clone the repository with submodule
+   ```
+   git clone --recursive https://github.com/yuanyuanli85/pytorch-pose.git
    ```
 
-3. Create a symbolic link to the `images` directory of the MPII dataset:
+4. Create a symbolic link to the `images` directory of the MPII dataset:
    ```
    ln -s PATH_TO_MPII_IMAGES_DIR data/mpii/images
    ```
