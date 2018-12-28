@@ -39,7 +39,7 @@ def main(args):
 
     # create model
     print("==> creating model '{}', stacks={}, blocks={}".format(args.arch, args.stacks, args.blocks))
-    model = models.__dict__[args.arch](num_stacks=args.stacks, num_blocks=args.blocks, num_classes=args.num_classes)
+    model = models.__dict__[args.arch](num_stacks=args.stacks, num_blocks=args.blocks, num_classes=args.num_classes, mobile=args.mobile)
 
     model = torch.nn.DataParallel(model).cuda()
 
@@ -306,6 +306,8 @@ if __name__ == '__main__':
                         help='Number of residual modules at each location in the hourglass')
     parser.add_argument('--num-classes', default=16, type=int, metavar='N',
                         help='Number of keypoints')
+    parser.add_argument('--mobile', default=False, type=bool, metavar='N',
+                        help='use depthwise convolution in bottneck-block')
     # Training strategy
     parser.add_argument('-j', '--workers', default=1, type=int, metavar='N',
                         help='number of data loading workers (default: 4)')
@@ -346,6 +348,7 @@ if __name__ == '__main__':
                         help='evaluate model on validation set')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true',
                         help='show intermediate results')
+
 
 
     main(parser.parse_args())
