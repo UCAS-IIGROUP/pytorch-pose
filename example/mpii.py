@@ -76,19 +76,21 @@ def main(args):
     # Data loading code
     train_loader = torch.utils.data.DataLoader(
         datasets.Mpii('data/mpii/mpii_annotations.json', 'data/mpii/images',
-                      sigma=args.sigma, label_type=args.label_type),
+                      sigma=args.sigma, label_type=args.label_type,
+                      inp_res=args.in_res, out_res=args.in_res//4),
         batch_size=args.train_batch, shuffle=True,
         num_workers=args.workers, pin_memory=True)
     
     val_loader = torch.utils.data.DataLoader(
         datasets.Mpii('data/mpii/mpii_annotations.json', 'data/mpii/images',
-                      sigma=args.sigma, label_type=args.label_type, train=False),
+                      sigma=args.sigma, label_type=args.label_type, train=False,
+                      inp_res=args.in_res, out_res=args.in_res // 4),
         batch_size=args.test_batch, shuffle=False,
         num_workers=args.workers, pin_memory=True)
 
     if args.evaluate:
         print('\nEvaluation only') 
-        loss, acc, predictions = validate(val_loader, model, criterion, args.num_classes, args.debug, args.flip)
+        loss, acc, predictions = validate(val_loader, model, criterion, args.num_classes, args.in_res//4, args.debug, args.flip)
         save_pred(predictions, checkpoint=args.checkpoint)
         return
 
@@ -107,7 +109,7 @@ def main(args):
 
         # evaluate on validation set
         valid_loss, valid_acc, predictions = validate(val_loader, model, criterion, args.num_classes,
-                                                      args.debug, args.flip)
+                                                      args.in_res//4, args.debug, args.flip)
 
         # append logger file
         logger.append([epoch + 1, lr, train_loss, valid_loss, train_acc, valid_acc])
@@ -203,7 +205,7 @@ def train(train_loader, model, criterion, optimizer, debug=False, flip=True):
     return losses.avg, acces.avg
 
 
-def validate(val_loader, model, criterion, num_classes, debug=False, flip=True):
+def validate(val_loader, model, criterion, num_classes, out_res, debug=False, flip=True):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -247,7 +249,7 @@ def validate(val_loader, model, criterion, num_classes, debug=False, flip=True):
         acc = accuracy(score_map, target.cpu(), idx)
 
         # generate predictions
-        preds = final_preds(score_map, meta['center'], meta['scale'], [64, 64])
+        preds = final_preds(score_map, meta['center'], meta['scale'], [out_res, out_res])
         for n in range(score_map.size(0)):
             predictions[meta['index'][n], :, :] = preds[n, :, :]
 
@@ -339,6 +341,9 @@ if __name__ == '__main__':
     parser.add_argument('--label-type', metavar='LABELTYPE', default='Gaussian',
                         choices=['Gaussian', 'Cauchy'],
                         help='Labelmap dist type: (default=Gaussian)')
+    parser.add_argument('--in_res', default=256, type=int,
+                        choices=[256, 192],
+                        help='input resolution for network')
     # Miscs
     parser.add_argument('-c', '--checkpoint', default='checkpoint', type=str, metavar='PATH',
                         help='path to save checkpoint (default: checkpoint)')
@@ -348,7 +353,5 @@ if __name__ == '__main__':
                         help='evaluate model on validation set')
     parser.add_argument('-d', '--debug', dest='debug', action='store_true',
                         help='show intermediate results')
-
-
 
     main(parser.parse_args())
