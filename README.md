@@ -4,11 +4,13 @@ PyTorch-Pose is a PyTorch implementation of the general pipeline for 2D single h
 
 Some codes for data preparation and augmentation are brought from the [Stacked hourglass network](https://github.com/anewell/pose-hg-train). Thanks to the original author. 
 
-## Features
-- Multi-thread data loading
-- Multi-GPU training
-- Logger
-- Training/testing results visualization
+## Models 
+| Model|in_res |featrues| # of Weights |Head|Shoulder|	Elbow|	Wrist|	Hip	|Knee|	Ankle|	Mean|
+| --- |---| ----|----------- | ----| ----| ---| ---| ---| ---| ---| ---|
+| hg_s2_b1|256|128|6.73m| 95.74| 94.51| 87.68| 81.70| 87.81| 80.88 |76.83| 86.58
+| hg_s2_b1_mobile|256|128|2.31m|95.80|  93.61| 85.50| 79.63| 86.13| 77.82| 73.62|  84.69|
+| hg_s2_b1_tiny|192|128|2.31m|95.02|  92.66| 84.37| 76.92| 84.16| 77.13| 72.08|  83.34|
+
 
 ## Installation
 1. Create a virtualenv
@@ -34,72 +36,41 @@ Some codes for data preparation and augmentation are brought from the [Stacked h
     ```
     sed -i "1194s/torch\.backends\.cudnn\.enabled/False/g" ./pose_venv/lib/python2.7/site-packages/torch/nn/functional.py
     ```
+## Training
 
-## Usage
-
-### Testing
-You may download our pretrained models (e.g., [2-stack hourglass model](https://drive.google.com/drive/folders/0B63t5HSgY4SQQ2FBRE5rQ2EzbjQ?usp=sharing)) for a quick start.
-
-Run the following command in terminal to evaluate the model on MPII validation split (The train/val split is from [Tompson et al. CVPR 2015](http://www.cims.nyu.edu/~tompson/data/mpii_valid_pred.zip)).
+* Normal network configuration, in_res 256, features 256
+```python 
+python example/mpii.py -a hg --stacks 2 --blocks 1 --checkpoint checkpoint/hg_s2_b1/ --in_res 256 --features 256
 ```
-CUDA_VISIBLE_DEVICES=0 python example/mpii.py -a hg --stacks 2 --blocks 1 --checkpoint checkpoint/mpii/hg_s2_b1 --resume checkpoint/mpii/hg_s2_b1/model_best.pth.tar -e -d
+
+* Mobile network configuration, in_res 256, features 256
+```python 
+python example/mpii.py -a hg --stacks 2 --blocks 1 --checkpoint checkpoint/hg_s2_b1_mobile/ --mobile True --in_res 256 --features 256
 ```
-* `-a` specifies a network architecture
-* `--resume` will load the weight from a specific model
-* `-e` stands for evaluation only
-* `-d` will visualize the network output. It can be also used during training
 
-The result will be saved as a `.mat` file (`preds_valid.mat`), which is a `2958x16x2` matrix, in the folder specified by `--checkpoint`.
-
-#### Evaluate the PCKh@0.5 score
-
-##### Evaluate with MATLAB
-
-You may use the matlab script `evaluation/eval_PCKh.m` to evaluate your predictions. The evaluation code is ported from  [Tompson et al. CVPR 2015](http://www.cims.nyu.edu/~tompson/data/mpii_valid_pred.zip).
-
-The results (PCKh@0.5 score) trained using this code is reported in the following table.
-
-
-| Model            | Head | Shoulder | Elbow | Wrist | Hip  | Knee  | Ankle | Mean | 
-| ---------------- | -----| -------- | ----- | ----- | ---- | ------|------ | ---- |
-| hg_s2_b1 (last)  | 95.80| 94.57    | 88.12 | 83.31 | 86.24| 80.88 | 77.44 | 86.76|
-| hg_s2_b1 (best)  | 95.87| 94.68    | 88.27 | 83.64 | 86.29| 81.20 | 77.70 | 86.95|
-| hg_s8_b1 (last)  | 96.79| 95.19    | 90.08 | 85.32 | 87.48| 84.26 | 80.73 | 88.64|
-| hg_s8_b1 (best)  | 96.79|	95.28	 | 90.27 | 85.56 | 87.57| 84.3  | 81.06	| 88.78|
-
-Training / validation curve is visualized as follows.
-
-![curve](data/acc_curve.png)
-##### Evaluate with Python
-
-You may also evaluate the result by running `python evaluation/eval_PCKh.py` to evaluate the predictions. It will produce exactly the same result as that of the MATLAB. Thanks [@sssruhan1](https://github.com/sssruhan1) for the [contribution](https://github.com/bearpaw/pytorch-pose/pull/2).
-
-### Training
-Run the following command in terminal to train an 8-stack of hourglass network on the MPII human pose dataset.
+* Tiny network configuration, in_res 192, features 128
+```python 
+python example/mpii.py -a hg --stacks 2 --blocks 1 --checkpoint checkpoint/hg_s2_b1_tiny/ --mobile True --in_res 192 --features 128
 ```
-CUDA_VISIBLE_DEVICES=0 python example/mpii.py -a hg --stacks 8 --blocks 1 --checkpoint checkpoint/mpii/hg8 -j 4
+
+## Evaluation
+
+Run evaluation to generate mat file
+```python
+python example/mpii.py -a hg --stacks 2 --blocks 1 --checkpoint checkpoint/hg_s2_b1/ --resume checkpoint/hg_s2_b1/model_best.pth.tar -e
 ```
-Here, 
-* `CUDA_VISIBLE_DEVICES=0` identifies the GPU devices you want to use. For example, use `CUDA_VISIBLE_DEVICES=0,1` if you want to use two GPUs with ID `0` and `1`. 
-* `-j` specifies how many workers you want to use for data loading. 
-* `--checkpoint` specifies where you want to save the models, the log and the predictions to.
+* `--resume_checkpoint` is the checkpoint want to evaluate
 
-Please refer to the `example/mpii.py` for the supported options/arguments.
+Run `evaluation/eval_PCKh.py` to get val score 
 
-## To Do List
-Supported dataset
-- [x] [MPII human pose](http://human-pose.mpi-inf.mpg.de)
-- [x] [Leeds Sports Pose (LSP)](http://sam.johnson.io/research/lsp.html)
-- [x] [MSCOCO (single person)](http://cocodataset.org/#keypoints-challenge2017)
-- [ ] FLIC
-
-Supported models
-- [x] [Stacked Hourglass networks](https://arxiv.org/abs/1603.06937)
-
-## Contribute
-Please create a pull request if you want to contribute.
-
-
+## Export pytorch checkpoint to onnx 
+```python
+python tools/mpii_export_to_onxx.py -a hg -s 2 -b 1 --num-classes 16 --mobile True --in_res 256  --checkpoint checkpoint/model_best.pth.tar 
+--out_onnx checkpointmodel_best.onnx 
+```
+Here 
+* `--checkpoint` is the checkpoint want to export 
+* `--out_onnx` is the exported onnx file
 
 
 

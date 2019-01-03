@@ -45,7 +45,6 @@ def main(args):
 
             print("=> loaded checkpoint '{}' (epoch {})"
                   .format(args.checkpoint, checkpoint['epoch']))
-            logger = Logger(join(args.checkpoint, 'log.txt'), title=title, resume=True)
         else:
             print("=> no checkpoint found at '{}'".format(args.checkpoint))
     else:
@@ -55,7 +54,7 @@ def main(args):
     cudnn.benchmark = True
     print('    Total params: %.2fM' % (sum(p.numel() for p in model.parameters()) / 1000000.0))
 
-    dummy_input = torch.randn(1, 3, 256, 256)
+    dummy_input = torch.randn(1, 3, args.in_res, args.in_res)
     torch.onnx.export(model, dummy_input, args.out_onnx)
 
 if __name__ == '__main__':
@@ -68,8 +67,6 @@ if __name__ == '__main__':
                              ' (default: resnet18)')
     parser.add_argument('-s', '--stacks', default=8, type=int, metavar='N',
                         help='Number of hourglasses to stack')
-    parser.add_argument('--features', default=256, type=int, metavar='N',
-                        help='Number of features in the hourglass')
     parser.add_argument('-b', '--blocks', default=1, type=int, metavar='N',
                         help='Number of residual modules at each location in the hourglass')
     parser.add_argument('--num-classes', default=16, type=int, metavar='N',
@@ -80,6 +77,6 @@ if __name__ == '__main__':
                         help='exported onnx file')
     parser.add_argument('--checkpoint', required=True, type=str, metavar='N',
                         help='pre-trained model checkpoint')
-    parser.add_argument('--input_shape', required=True, type=str, metavar='N',
-                        help='input shape i.e 1x3x256x256')
+    parser.add_argument('--in_res', required=True, type=int, metavar='N',
+                        help='input shape 128 or 256')
     main(parser.parse_args())
